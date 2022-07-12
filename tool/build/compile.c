@@ -436,6 +436,12 @@ char *StripPrefix(char *s, char *p) {
 }
 
 void AddArg(char *s) {
+  if (!X86_HAVE(AVX) &&
+      (!strcmp(s, "-msse2avx") || !strcmp(s, "-Wa,-msse2avx"))) {
+    // Avoid any chance of people using Intel's older or low power
+    // CPUs encountering a SIGILL error due to these awesome flags
+    return;
+  }
   if (args.n) {
     appendw(&command, ' ');
   }
@@ -854,12 +860,6 @@ int main(int argc, char *argv[]) {
       continue;
     }
     if (isclang && IsGccOnlyFlag(argv[i])) {
-      continue;
-    }
-    if (!X86_HAVE(AVX) &&
-        (!strcmp(argv[i], "-msse2avx") || !strcmp(argv[i], "-Wa,-msse2avx"))) {
-      // Avoid any chance of people using Intel's older or low power
-      // CPUs encountering a SIGILL error due to these awesome flags
       continue;
     }
     if (!strcmp(argv[i], "-w")) {
